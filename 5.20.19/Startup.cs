@@ -14,6 +14,9 @@ namespace _5._20._19
 {
     public class Startup
     {
+
+        public const string CookieScheme = "Account";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -31,6 +34,14 @@ namespace _5._20._19
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.AddAuthentication(CookieScheme)
+              .AddCookie(CookieScheme, options =>
+              {
+                  options.AccessDeniedPath = "/account/denied";
+                  options.LoginPath = "/account/login";
+              });
+
+            services.AddSession();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
@@ -49,6 +60,7 @@ namespace _5._20._19
             }
 
             app.UseHttpsRedirection();
+            app.UseAuthentication();
             app.UseStaticFiles();
             app.UseCookiePolicy();
 

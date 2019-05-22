@@ -5,39 +5,64 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using _5._20._19.Models;
+using Data;
+using shortid;
+using Microsoft.Extensions.Configuration;
 
 namespace _5._20._19.Controllers
 {
     public class HomeController : Controller
     {
+        private string _conn;
+        public HomeController(IConfiguration configuration)
+        {
+            _conn = configuration.GetConnectionString("ConStr");
+        }
         public IActionResult Index()
         {
-            return View();
+            if (User.Identity.IsAuthenticated)
+            {
+                var repo = new UrlRepository(_conn);
+                var user = repo.GetUserByEmail(User.Identity.Name);
+                return View(user.Id);
+            }
+            else
+            {
+                return View(0);
+            }
         }
 
-        public IActionResult About()
+        [HttpPost]
+        public string AddUrl(string completeUrl, int userId)
         {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
+            var repo = new UrlRepository(_conn);
+            string urlHash = repo.AddUrl(completeUrl, userId);
+            //return Json(repo.AddUrl(completeUrl, userId));
+            return urlHash;
         }
 
-        public IActionResult Contact()
+
+        [Route("/hash/{urlHash}")]
+        public IActionResult Reroute(string urlHash)
         {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
+            var repo = new UrlRepository(_conn);
+            string url = repo.GetCompleteUrl(urlHash);
+            return Redirect($"{url}");
         }
 
-        public IActionResult Privacy()
+        public IActionResult MyUrls()
         {
-            return View();
+            if (User.Identity.IsAuthenticated)
+            {
+                var repo = new UrlRepository(_conn);
+                var urls = repo.GetUrlsForUser(User.Identity.Name);
+                return View(urls);
+            }
+            else
+            {
+                return Redirect("/account/login");
+            }
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
     }
 }
