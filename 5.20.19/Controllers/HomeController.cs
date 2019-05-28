@@ -37,7 +37,7 @@ namespace _5._20._19.Controllers
         {
             var repo = new UrlRepository(_conn);
             string urlHash = repo.AddUrl(completeUrl, userId);
-            //return Json(repo.AddUrl(completeUrl, userId));
+            //return Json(new { urlHash = completeUrl });
             return urlHash;
         }
 
